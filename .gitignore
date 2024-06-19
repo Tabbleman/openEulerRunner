@@ -1,6 +1,6 @@
 *.swp
 
 imgs/*
-*.fd
+# *.fd
 *.img
 *.sh

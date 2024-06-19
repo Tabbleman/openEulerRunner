@@ -81,4 +81,4 @@ arch_run: check_hdd
 
 # Clean up the virtual hard disk
 clean:
-	$(RM) $(HDD_FILE)
+	$(RM) *.img
