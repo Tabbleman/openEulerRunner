@@ -26,7 +26,7 @@ RISCV64_IMG="./imgs/openEuler-24.03-LTS-riscv64.qcow2"
 # detect which platform 
 prepare_x86:
 	@if [ ! -f $(X86_IMG) ]; then \
-		echo "fetching file..."
+		echo "fetching file..." \
 	else \
 		echo "$(X86_IMG) already exists, skipping creation"; \
 	fi
@@ -78,12 +78,10 @@ boot_exists: check_hdd
 		-device virtio-vga \
 		-device virtio-blk,drive=hd0 \
 		-device virtio-net,netdev=usernet \
-		-blockdev node-name=pflash0,driver=file,read-only=on,filename=$(RISCV_VIRT_CODE) \
-  	-blockdev node-name=pflash1,driver=file,filename=$(RISCV_VIRT_VARS) \
-		-netdev user,id=usernet,hostfwd=tcp::12057-:22 \
+		-netdev user,id=usernet,hostfwd=tcp::$(NET_PORT)-:22 \
 		-device qemu-xhci -usb -device usb-kbd -device usb-tablet \
 		-device virtio-rng \
-		-drive if=pflash,format=raw,file=OVMF.fd 
+		-drive if=pflash,format=raw
 
 # ref https://wiki.debian.org/Arm64Qemu
 arch_run: check_hdd
@@ -96,13 +94,13 @@ arch_run: check_hdd
 		-device virtio-gpu \
 		-device virtio-blk,drive=hd0 \
 		-device virtio-net,netdev=usernet \
-		-netdev user,id=usernet,hostfwd=tcp::12057-:22 \
+		-netdev user,id=usernet,hostfwd=tcp::$(NET_PORT)-:22 \
 		-device qemu-xhci -usb -device usb-kbd -device usb-tablet \
 		$(BIOS_OPTION) \
 		-device virtio-rng 
 
 
-
+# TODO: merge with upper target
 res: check_hdd
 	sudo $(QEMU) \
 		-nographic -M virt,pflash0=pflash0,pflash1=pflash1,acpi=off \

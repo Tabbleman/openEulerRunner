@@ -34,3 +34,9 @@ cd qemu-9.0.1
 make -j
 sudo make install
 ```
+
+如果你已经在对应的文件夹里面有那么你可以使用`make help`查看指北。
+```shell
+make clean && make x86 # or [aarch64|riscv64]
+
+```
