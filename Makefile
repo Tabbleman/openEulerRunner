@@ -1,8 +1,8 @@
 
-HDD_FILE := sys.img
+HDD_FILE := sys_arm.img
 MEMORY := 2048M
 HDD_SIZE := 1G
-NET_PORT := 12058
+NET_PORT := 12059
 
 RISCV_FIRMWARE_CODE="RISCV_VIRT_CODE.fd"
 RISCV_FIRMWARE_VARS="RISCV_VIRT_VARS.fd"
@@ -51,7 +51,7 @@ prepare_riscv64:
 	fi
 
 x86: prepare_x86
-	$(MAKE) arch_run QEMU=qemu-system-x86_64 ISO_FILE=$(X86_IMG) MACHINE=pc ACCEL=kvm CPU=host BIOS_OPTION=""
+	$(MAKE) arch_run QEMU=qemu-system-x86_64 ISO_FILE=$(X86_IMG) MACHINE=pc ACCEL=tcg CPU=EPYC BIOS_OPTION=""
 
 aarch64: prepare_aarch64
 	$(MAKE) arch_run QEMU=qemu-system-aarch64 ISO_FILE=$(AARCH64_IMG) MACHINE=virt ACCEL=tcg CPU=cortex-a57 BIOS_OPTION="-bios ./QEMU_EFI.fd"
@@ -82,19 +82,18 @@ check_hdd:
 		echo "Booting operating system"; \
 	fi
 
-boot_exists: check_hdd
+boot_x86: check_hdd
 	sudo $(QEMU) \
 		-nographic -M pc -accel $(ACCEL) \
-		-cpu host \
-		-smp 8 -m 8G \
+		-cpu $(CPU) \
+		-smp 8 -m $(MEMORY) \
 		-drive file="$(HDD_FILE)",format=qcow2,id=hd0,if=none \
 		-device virtio-vga \
 		-device virtio-blk,drive=hd0 \
 		-device virtio-net,netdev=usernet \
 		-netdev user,id=usernet,hostfwd=tcp::$(NET_PORT)-:22 \
 		-device qemu-xhci -usb -device usb-kbd -device usb-tablet \
-		-device virtio-rng \
-		-drive if=pflash,format=raw
+		-device virtio-rng 
 
 arch_run: check_hdd
 	sudo $(QEMU) \
@@ -118,3 +117,6 @@ res: check_hdd
 		-cpu $(CPU) \
 		-smp 8 -m 8G \
 		-drive file="$(HDD_FILE)",format=
+
+clean:
+	rm -rf ./*.img
