@@ -1,8 +1,12 @@
-
+# TODO: 
+# 检查qemu启动器编译选项
+# 在已经安装了某个arch的sys.img之后，如果make另一个会出问题。
+# 下载qemu并且直接按照对应编译选项进行安装。（不建议加）
+# window的support
 HDD_FILE := sys.img
 MEMORY := 16G
 HDD_SIZE := 50G
-NET_PORT := 12058
+NET_PORT := 12059
 
 RISCV_FIRMWARE_CODE="RISCV_VIRT_CODE.fd"
 RISCV_FIRMWARE_VARS="RISCV_VIRT_VARS.fd"
@@ -51,9 +55,8 @@ aarch64: prepare_aarch64
 	$(MAKE) arch_run QEMU=qemu-system-aarch64 ISO_FILE=$(AARCH64_IMG) MACHINE=virt ACCEL=tcg CPU=cortex-a57 BIOS_OPTION="-bios ./QEMU_EFI.fd"
 
 riscv64: prepare_riscv64
-	$(MAKE) res QEMU=qemu-system-riscv64 ISO_FILE=$(RISCV64_IMG) MACHINE=virt ACCEL=tcg CPU=rv64
+	$(MAKE) arch_riscv QEMU=qemu-system-riscv64 ISO_FILE=$(RISCV64_IMG) MACHINE=virt ACCEL=tcg CPU=rv64
 
-.PHONY: all run clean help x86 aarch64 riscv64 arch_run
 
 help: 
 	@echo "Usage: make [x86|aarch64|riscv64]"
@@ -91,7 +94,7 @@ arch_run: check_hdd
 		$(BIOS_OPTION) \
 		-device virtio-rng 
 
-res: check_hdd
+arch_riscv: check_hdd
 	sudo $(QEMU) \
 		-nographic -M virt,pflash0=pflash0,pflash1=pflash1,acpi=off \
 		-accel $(ACCEL) \
@@ -114,3 +117,5 @@ res: check_hdd
 
 clean:
 	rm -rf ./*.img
+
+.PHONY: all run clean help x86 aarch64 riscv64 arch_run
