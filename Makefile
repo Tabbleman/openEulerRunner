@@ -29,7 +29,6 @@ prepare_x86:
 	else \
 		echo "$(X86_IMG) already exists, skipping creation"; \
 	fi
-
 prepare_aarch64:
 	@if [ ! -f $(AARCH64_IMG) ]; then \
 		echo "fetching file...\n"; \
@@ -51,6 +50,7 @@ prepare_riscv64:
 x86: prepare_x86
 	$(MAKE) arch_run QEMU=qemu-system-x86_64 ISO_FILE=$(X86_IMG) MACHINE=pc ACCEL=tcg CPU=EPYC BIOS_OPTION=""
 
+# @ref https://wiki.debian.org/Arm64Qemu
 aarch64: prepare_aarch64
 	$(MAKE) arch_run QEMU=qemu-system-aarch64 ISO_FILE=$(AARCH64_IMG) MACHINE=virt ACCEL=tcg CPU=cortex-a57 BIOS_OPTION="-bios ./QEMU_EFI.fd"
 
@@ -93,7 +93,7 @@ arch_run: check_hdd
 		-device qemu-xhci -usb -device usb-kbd -device usb-tablet \
 		$(BIOS_OPTION) \
 		-device virtio-rng 
-
+# @ref https://mirrors.nju.edu.cn/openeuler/openEuler-24.03-LTS/virtual_machine_img/riscv64/start_vm.sh
 arch_riscv: check_hdd
 	sudo $(QEMU) \
 		-nographic -M virt,pflash0=pflash0,pflash1=pflash1,acpi=off \
