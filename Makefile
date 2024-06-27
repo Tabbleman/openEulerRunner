@@ -1,8 +1,8 @@
 
-HDD_FILE := sys_arm.img
-MEMORY := 2048M
-HDD_SIZE := 1G
-NET_PORT := 12059
+HDD_FILE := sys.img
+MEMORY := 16G
+HDD_SIZE := 50G
+NET_PORT := 12058
 
 RISCV_FIRMWARE_CODE="RISCV_VIRT_CODE.fd"
 RISCV_FIRMWARE_VARS="RISCV_VIRT_VARS.fd"
@@ -21,9 +21,7 @@ prepare_x86:
 	@if [ ! -f $(X86_IMG) ]; then \
 		echo "fetching file...\n"; \
 		wget -P ./imgs/ https://mirror.sjtu.edu.cn/openeuler/openEuler-24.03-LTS/virtual_machine_img/x86_64/openEuler-24.03-LTS-x86_64.qcow2.xz; \
-		cd ./imgs/ \
-		unxz openEuler-24.03-LTS-x86_64.qcow2.xz \
-		cd .. \
+		cd ./imgs/ && unxz openEuler-24.03-LTS-x86_64.qcow2.xz && cd .. \
 	else \
 		echo "$(X86_IMG) already exists, skipping creation"; \
 	fi
@@ -32,9 +30,7 @@ prepare_aarch64:
 	@if [ ! -f $(AARCH64_IMG) ]; then \
 		echo "fetching file...\n"; \
 		wget -P ./imgs/ https://mirror.sjtu.edu.cn/openeuler/openEuler-24.03-LTS/virtual_machine_img/aarch64/openEuler-24.03-LTS-aarch64.qcow2.xz; \
-		cd ./imgs/ \
-		unxz openEuler-24.03-LTS-aarch64.qcow2.xz; \
-		cd .. \
+		cd ./imgs/ && unxz openEuler-24.03-LTS-aarch64.qcow2.xz && cd .. \
 	else \
 		echo "$(AARCH64_IMG) already exists, skipping creation"; \
 	fi
@@ -43,9 +39,7 @@ prepare_riscv64:
 	@if [ ! -f $(RISCV64_IMG) ]; then \
 		echo "fetching file...\n"; \
 		wget -P ./imgs/ https://mirror.sjtu.edu.cn/openeuler/openEuler-24.03-LTS/virtual_machine_img/riscv64/openEuler-24.03-LTS-riscv64.qcow2.xz; \
-		cd ./imgs/ \
-		unxz openEuler-24.03-LTS-riscv64.qcow2.xz; \
-		cd .. \
+		cd ./imgs/ && unxz openEuler-24.03-LTS-riscv64.qcow2.xz && cd .. \
 	else \
 		echo "$(RISCV64_IMG) already exists, skipping creation"; \
 	fi
@@ -82,19 +76,6 @@ check_hdd:
 		echo "Booting operating system"; \
 	fi
 
-boot_x86: check_hdd
-	sudo $(QEMU) \
-		-nographic -M pc -accel $(ACCEL) \
-		-cpu $(CPU) \
-		-smp 8 -m $(MEMORY) \
-		-drive file="$(HDD_FILE)",format=qcow2,id=hd0,if=none \
-		-device virtio-vga \
-		-device virtio-blk,drive=hd0 \
-		-device virtio-net,netdev=usernet \
-		-netdev user,id=usernet,hostfwd=tcp::$(NET_PORT)-:22 \
-		-device qemu-xhci -usb -device usb-kbd -device usb-tablet \
-		-device virtio-rng 
-
 arch_run: check_hdd
 	sudo $(QEMU) \
 		-nographic -M $(MACHINE) \
@@ -116,7 +97,20 @@ res: check_hdd
 		-accel $(ACCEL) \
 		-cpu $(CPU) \
 		-smp 8 -m 8G \
-		-drive file="$(HDD_FILE)",format=
+		-drive file="$(HDD_FILE)",format=qcow2,id=hd0,if=none \
+		-device virtio-gpu \
+		-device virtio-net,netdev=usernet \
+		-netdev user,id=usernet,hostfwd=tcp::$(NET_PORT)-:22 \
+		-device qemu-xhci -usb -device usb-kbd -device usb-tablet \
+		$(BIOS_OPTION) \
+		-device virtio-rng \
+		-blockdev node-name=pflash0,driver=file,read-only=on,filename=$(RISCV_FIRMWARE_CODE) \
+		-blockdev node-name=pflash1,driver=file,filename=$(RISCV_FIRMWARE_VARS) \
+		-object memory-backend-ram,size=4G,id=ram1 \
+		-numa node,memdev=ram1 \
+		-object memory-backend-ram,size=4G,id=ram2 \
+		-numa node,memdev=ram2 \
+		-device virtio-blk-device,drive=hd0,bootindex=1 
 
 clean:
 	rm -rf ./*.img
