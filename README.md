@@ -5,10 +5,19 @@ openEuler qemu的自动化工作流
 - [x] x86下的自动化
 - [x] aarch64下面的自动化
 - [x] riscv64下面的自动化
-- [ ] 下载镜像
+- [x] 下载镜像
 - [ ] 查看是否现有qemu以及支持的选项
 
 ## 使用手册：
+
+```bash
+make riscv64 # boot a riscv openeuler 2404
+make x86 # boot a x86 openeuler 2404
+make aarch64 # boot a arm openeuler 2404
+# notice: you should make sure `make clean` everytime when you have a image installed but you want boot another arch.
+```
+
+
 理想的项目文件结构是这样的：
 ```text
 .
@@ -24,13 +33,12 @@ openEuler qemu的自动化工作流
 
 ```
 
-请确保你的qemu包含kvm的feature。
-如果不确定可以从qemu官网下载源码直接编译：
+
+从qemu官网下载源码直接编译：
 ```shell
 wget https://download.qemu.org/qemu-9.0.1.tar.xz
 tar xf qemu-9.0.1.tar.xz
 cd qemu-9.0.1
-./configure -enable-kvm 
 make -j
 sudo make install
 ```
